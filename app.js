@@ -16,5 +16,5 @@ app.use("/users", require("./routes/users"));
 app.use("/public", express.static("public"));
 
 app.listen(port, () => {
-  console.log(`App is listening at http://${host}:${port}`);
+  console.log(`App is listening at ${host}:${port}`);
 });
