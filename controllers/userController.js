@@ -94,6 +94,7 @@ const userAddApp = async (req, res) => {
     res.status(200).json({ message: "ok" });
   } catch (e) {
     res.status(301).json({ message: "error", data: "User Already Exists." });
+    console.log(e);
   }
 };
 
