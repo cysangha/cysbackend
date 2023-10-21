@@ -27,5 +27,5 @@ let userSchema = new mongoose.Schema(
   }
 );
 
-let users = conn.model("userMemberApp", userSchema, "userMemberApp");
+let users = conn.model("userMembersApp", userSchema, "userMembersApp");
 module.exports = users;
