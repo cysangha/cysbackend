@@ -15,6 +15,8 @@ let userSchema = new mongoose.Schema(
     id: String, //Added For Firebase
     name: String,
     access: String,
+    memberID: String,
+    date: String,
     mobile: {
       type: String,
       unique: true,
