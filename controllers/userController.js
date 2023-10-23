@@ -47,6 +47,9 @@ const userAdd = async (req, res) => {
     photoName,
     url,
     password,
+    access,
+    memberID,
+    date,
   } = req.body;
   let data = await new Users({
     username,
@@ -58,6 +61,9 @@ const userAdd = async (req, res) => {
     photoName,
     url,
     password,
+    access,
+    memberID,
+    date,
   });
   try {
     let response = await data.save();
@@ -77,6 +83,9 @@ const userAddApp = async (req, res) => {
     photoName,
     url,
     password,
+    access,
+    memberID,
+    date,
   } = req.body;
   let data = await new UsersApp({
     username,
@@ -88,6 +97,9 @@ const userAddApp = async (req, res) => {
     photoName,
     url,
     password,
+    access,
+    memberID,
+    date,
   });
   try {
     let response = await data.save();
