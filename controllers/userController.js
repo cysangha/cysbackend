@@ -390,7 +390,7 @@ const addAccountAdminMailer = (
     from: mail,
     to: adminEmail,
     subject: `One Member Registered Via App: Mail no ${mailNo}`,
-    text: `Dear ${addminName}, One Member ${name}Your Has Been Registered Successfully via App.\n His/Her username is ${username},\n Mobile No. is ${mobile},\n Email id is ${email}.\n`,
+    text: `Dear ${addminName}, One Member ${name} Has Been Registered Successfully via App.\n His/Her username is ${username},\n Mobile No. is ${mobile},\n Email id is ${email}.\n`,
   };
   transporter.sendMail(mailoptions, (error, info) => {
     if (error) {
