@@ -354,7 +354,7 @@ const addAccountMailer = (email, name, mobile, username) => {
     from: mail,
     to: email,
     subject: `Registration Successful: Mail no ${mailNo}`,
-    text: `Dear ${name}Your Have Been Successfully Registered.\n Your username is ${username},\n Mobile No. is ${mobile},\n Email id is ${email}.\n If You Haven't Registered it Own,\n Please contact us at ${mail} `,
+    text: `Dear ${name} You Have Been Successfully Registered.\n Your username is ${username},\n Mobile No. is ${mobile},\n Email id is ${email}.\n If You Haven't Registered it Own,\n Please contact us at ${mail} `,
   };
   transporter.sendMail(mailoptions, (error, info) => {
     if (error) {
