@@ -1,7 +1,9 @@
 const Users = require("../models/users");
 const UsersApp = require("../models/usersApp");
 let Otp = require("../models/otp");
-const { decryptObjFromAPI } = require("../modules/encryption");
+let NewMember = require("../models/member");
+let Payments = require("../models/payments");
+let PaymentsAdmin = require("../models/paymentsAdmin");
 
 let admins = [
   {
@@ -44,6 +46,206 @@ const delUserApp = async (req, res) => {
   } catch (e) {
     res.status(301).json({ message: "error", data: "Something Went Wrong" });
     console.log(e);
+  }
+};
+
+const newMemberAdd = async (req, res) => {
+  let {
+    id,
+    email,
+    member_name,
+    father_name,
+    access,
+    member_id,
+    type,
+    date,
+    membershipPurchaseDate,
+    membershipPeriod,
+    membershipPeriodBeng,
+    pricePaid,
+    mobile,
+  } = req.body;
+  let data = await new NewMember({
+    id,
+    email,
+    member_name,
+    father_name,
+    access,
+    member_id,
+    type,
+    date,
+    membershipPurchaseDate,
+    membershipPeriod,
+    membershipPeriodBeng,
+    pricePaid,
+    mobile,
+  });
+  try {
+    let response = await data.save();
+    res.status(200).json({ message: "ok" });
+    newMemberAddMailer(email, member_name, member_id, mobile);
+    admins.map((el) =>
+      newMemberAddAdminMailer(
+        el.email,
+        el.name,
+        member_name,
+        email,
+        member_id,
+        mobile
+      )
+    );
+  } catch (e) {
+    res.status(301).json({ message: "error", data: "Member Already Exists." });
+  }
+};
+const newPayment = async (req, res) => {
+  let {
+    id,
+    paymentID,
+    purchasedByID,
+    purchasedByName,
+    purchasedByMobile,
+    purchasedByEmail,
+    type,
+    date,
+    membershipPeriod,
+    membershipPeriodBeng,
+    pricePaid,
+  } = req.body;
+  let data = await new Payments({
+    id,
+    paymentID,
+    purchasedByID,
+    purchasedByName,
+    purchasedByMobile,
+    purchasedByEmail,
+    type,
+    date,
+    membershipPeriod,
+    membershipPeriodBeng,
+    pricePaid,
+  });
+  try {
+    let response = await data.save();
+    res.status(200).json({ message: "ok" });
+    newPaymentMailer(
+      purchasedByEmail,
+      member_name,
+      purchasedByID,
+      purchasedByMobile,
+      id
+    );
+    admins.map((el) =>
+      newPaymentAdminMailer(
+        el.email,
+        el.name,
+        member_name,
+        pricePaid,
+        id,
+        membershipPeriod,
+        purchasedByMobile
+      )
+    );
+  } catch (e) {
+    res.status(301).json({ message: "error", data: "Payment Cannot Be Done." });
+  }
+};
+const newOnlinePaymentByAdmin = async (req, res) => {
+  let {
+    id,
+    paymentID,
+    purchasedByID,
+    purchasedByName,
+    purchasedByAdminName,
+    purchasedByMobile,
+    purchasedByEmail,
+    type,
+    date,
+    membershipPeriod,
+    membershipPeriodBeng,
+    pricePaid,
+  } = req.body;
+  let data = await new PaymentsAdmin({
+    id,
+    paymentID,
+    purchasedByID,
+    purchasedByName,
+    purchasedByAdminName,
+    purchasedByMobile,
+    purchasedByEmail,
+    type,
+    date,
+    membershipPeriod,
+    membershipPeriodBeng,
+    pricePaid,
+  });
+  try {
+    let response = await data.save();
+    res.status(200).json({ message: "ok" });
+
+    admins.map((el) =>
+      newOnlinePaymentByAdminMailer(
+        el.email,
+        el.name,
+        purchasedByName,
+        purchasedByAdminName,
+        pricePaid,
+        id,
+        membershipPeriod,
+        purchasedByMobile
+      )
+    );
+  } catch (e) {
+    res.status(301).json({ message: "error", data: "Payment Cannot Be Done." });
+  }
+};
+const newOfflinePaymentByAdmin = async (req, res) => {
+  let {
+    id,
+    paymentID,
+    purchasedByID,
+    purchasedByName,
+    purchasedByAdminName,
+    purchasedByMobile,
+    purchasedByEmail,
+    type,
+    date,
+    membershipPeriod,
+    membershipPeriodBeng,
+    pricePaid,
+  } = req.body;
+  let data = await new PaymentsAdmin({
+    id,
+    paymentID,
+    purchasedByID,
+    purchasedByName,
+    purchasedByAdminName,
+    purchasedByMobile,
+    purchasedByEmail,
+    type,
+    date,
+    membershipPeriod,
+    membershipPeriodBeng,
+    pricePaid,
+  });
+  try {
+    let response = await data.save();
+    res.status(200).json({ message: "ok" });
+
+    admins.map((el) =>
+      newOfflinePaymentByAdminMailer(
+        el.email,
+        el.name,
+        purchasedByName,
+        purchasedByAdminName,
+        pricePaid,
+        id,
+        membershipPeriod,
+        purchasedByMobile
+      )
+    );
+  } catch (e) {
+    res.status(301).json({ message: "error", data: "Payment Cannot Be Done." });
   }
 };
 
@@ -364,6 +566,225 @@ const addAccountMailer = (email, name, mobile, username) => {
     }
   });
 };
+const newMemberAddMailer = (email, name, member_id, mobile) => {
+  const nodemailer = require("nodemailer");
+  var smtpTransport = require("nodemailer-smtp-transport");
+  let transporter = nodemailer.createTransport(
+    smtpTransport({
+      service: "gmail",
+      auth: {
+        user: mail,
+        pass: mailpassword,
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+    })
+  );
+  let mailoptions = {
+    from: mail,
+    to: email,
+    subject: `Member Registration Successful: Mail no ${mailNo}`,
+    text: `Dear ${name} Your Membership Has Been Successfully Registered.\n Your Member ID is ${member_id},\n Mobile No. is ${mobile},\n Email id is ${email}.\n If You Haven't Registered it Own,\n Please contact us at ${mail}.\n You Have Made a Successful Payment of Rs. 130. `,
+  };
+  transporter.sendMail(mailoptions, (error, info) => {
+    if (error) {
+      console.log(error);
+    } else {
+      console.log("Email Sent: " + info.response);
+    }
+  });
+};
+const newMemberAddAdminMailer = (
+  adminEmail,
+  addminName,
+  member_name,
+  email,
+  member_id,
+  mobile
+) => {
+  const nodemailer = require("nodemailer");
+  var smtpTransport = require("nodemailer-smtp-transport");
+  let transporter = nodemailer.createTransport(
+    smtpTransport({
+      service: "gmail",
+      auth: {
+        user: mail,
+        pass: mailpassword,
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+    })
+  );
+  let mailoptions = {
+    from: mail,
+    to: adminEmail,
+    subject: `One Member Registered Via App: Mail no ${mailNo}`,
+    text: `Dear ${addminName}, One Member ${member_name} Has Been Registered Successfully via App.\n His/Her Member ID is ${member_id},\n Mobile No. is ${mobile},\n Email id is ${email}.\n`,
+  };
+  transporter.sendMail(mailoptions, (error, info) => {
+    if (error) {
+      console.log(error);
+    } else {
+      console.log("Email Sent: " + info.response);
+    }
+  });
+};
+const newPaymentMailer = (email, name, pricePaid, membershipPeriod, id) => {
+  const nodemailer = require("nodemailer");
+  var smtpTransport = require("nodemailer-smtp-transport");
+  let transporter = nodemailer.createTransport(
+    smtpTransport({
+      service: "gmail",
+      auth: {
+        user: mail,
+        pass: mailpassword,
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+    })
+  );
+  let mailoptions = {
+    from: mail,
+    to: email,
+    subject: `Your Payment of Rs. ${pricePaid} is Successful: Mail no ${mailNo}`,
+    text: `Dear ${name} Your Payment of Rs. ${pricePaid} is Successful.\n Your Membership will be Renewed For ${membershipPeriod} Months.\n Your Payment ID is ${id}.\n A Lots of Thanks from Chitrasenpur Yubak Sangha.\n If You Have any complain,\n Please contact us at ${mail}.\n `,
+  };
+  transporter.sendMail(mailoptions, (error, info) => {
+    if (error) {
+      console.log(error);
+    } else {
+      console.log("Email Sent: " + info.response);
+    }
+  });
+};
+const newPaymentAdminMailer = (
+  adminEmail,
+  addminName,
+  name,
+  pricePaid,
+  id,
+  membershipPeriod,
+  mobile
+) => {
+  const nodemailer = require("nodemailer");
+  var smtpTransport = require("nodemailer-smtp-transport");
+  let transporter = nodemailer.createTransport(
+    smtpTransport({
+      service: "gmail",
+      auth: {
+        user: mail,
+        pass: mailpassword,
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+    })
+  );
+  let mailoptions = {
+    from: mail,
+    to: adminEmail,
+    subject: `${name} Made a Payment of Rs. ${pricePaid}: Mail no ${mailNo}`,
+    text: `Dear ${addminName}, ${name} Made a Payment of Rs. ${pricePaid} via App.\n His/Her Payment ID is ${id},\n Mobile No. is ${mobile},\n Email id is ${email}.\n He/She Purchased Membership of ${
+      membershipPeriod > 1
+        ? `${membershipPeriod} Months`
+        : `${membershipPeriod} Month`
+    }. `,
+  };
+  transporter.sendMail(mailoptions, (error, info) => {
+    if (error) {
+      console.log(error);
+    } else {
+      console.log("Email Sent: " + info.response);
+    }
+  });
+};
+const newOnlinePaymentByAdminMailer = (
+  adminEmail,
+  addminName,
+  name,
+  purchasedByAdminName,
+  pricePaid,
+  id,
+  membershipPeriod,
+  mobile
+) => {
+  const nodemailer = require("nodemailer");
+  var smtpTransport = require("nodemailer-smtp-transport");
+  let transporter = nodemailer.createTransport(
+    smtpTransport({
+      service: "gmail",
+      auth: {
+        user: mail,
+        pass: mailpassword,
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+    })
+  );
+  let mailoptions = {
+    from: mail,
+    to: adminEmail,
+    subject: `Admin ${addminName} Made an Online Payment of Rs. ${pricePaid}: Mail no ${mailNo}`,
+    text: `Dear ${addminName}, Admin ${purchasedByAdminName} Made a Payment of Rs. ${pricePaid} via App for ${name}.\n His/Her Payment ID is ${id},\n Mobile No. is ${mobile}.\n He/She Purchased Membership of ${
+      membershipPeriod > 1
+        ? `${membershipPeriod} Months`
+        : `${membershipPeriod} Month`
+    }. `,
+  };
+  transporter.sendMail(mailoptions, (error, info) => {
+    if (error) {
+      console.log(error);
+    } else {
+      console.log("Email Sent: " + info.response);
+    }
+  });
+};
+const newOfflinePaymentByAdminMailer = (
+  adminEmail,
+  addminName,
+  name,
+  purchasedByAdminName,
+  pricePaid,
+  id,
+  membershipPeriod,
+  mobile
+) => {
+  const nodemailer = require("nodemailer");
+  var smtpTransport = require("nodemailer-smtp-transport");
+  let transporter = nodemailer.createTransport(
+    smtpTransport({
+      service: "gmail",
+      auth: {
+        user: mail,
+        pass: mailpassword,
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+    })
+  );
+  let mailoptions = {
+    from: mail,
+    to: adminEmail,
+    subject: `Admin ${addminName} Made an Offline Payment of Rs. ${pricePaid}: Mail no ${mailNo}`,
+    text: `Dear ${addminName}, Admin ${purchasedByAdminName} Made an Offline Payment of Rs. ${pricePaid} via App for ${name}.\n His/Her Payment ID is ${id},\n Mobile No. is ${mobile}.\n He/She Purchased Membership of ${
+      membershipPeriod > 1
+        ? `${membershipPeriod} Months`
+        : `${membershipPeriod} Month`
+    }. `,
+  };
+  transporter.sendMail(mailoptions, (error, info) => {
+    if (error) {
+      console.log(error);
+    } else {
+      console.log("Email Sent: " + info.response);
+    }
+  });
+};
 const addAccountAdminMailer = (
   adminEmail,
   addminName,
@@ -411,4 +832,8 @@ module.exports = {
   delUserApp,
   emailSendApp,
   forgotPasswordApp,
+  newPayment,
+  newMemberAdd,
+  newOnlinePaymentByAdmin,
+  newOfflinePaymentByAdmin,
 };
