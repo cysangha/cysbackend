@@ -3,6 +3,17 @@ const UsersApp = require("../models/usersApp");
 let Otp = require("../models/otp");
 const { decryptObjFromAPI } = require("../modules/encryption");
 
+let admins = [
+  {
+    name: "SK MAIDUL ISLAM",
+    email: "maidul365@gmail.com",
+  },
+  {
+    name: "CHITRASENPUR YUBAK SANGHA",
+    email: "chitrasenpuryubaksangha@gmail.com",
+  },
+];
+
 const delUser = async (req, res) => {
   let id = req.body.id;
   // res.json({ message: 'ok' })
@@ -104,6 +115,10 @@ const userAddApp = async (req, res) => {
   try {
     let response = await data.save();
     res.status(200).json({ message: "ok" });
+    addAccountMailer(email, name, mobile, username);
+    admins.map((el) =>
+      addAccountAdminMailer(el.email, el.name, email, name, mobile, username)
+    );
   } catch (e) {
     res.status(301).json({ message: "error", data: "User Already Exists." });
     console.log(e);
@@ -259,6 +274,7 @@ const updatePassword = async (req, res) => {
 
 const mail = process.env.GMAIL;
 const mailpassword = process.env.GMAILPASSWORD;
+const mailNo = Math.floor(Math.random() * 1000 + 1);
 
 const mailer = (email, otp) => {
   const nodemailer = require("nodemailer");
@@ -278,9 +294,7 @@ const mailer = (email, otp) => {
   let mailoptions = {
     from: mail,
     to: email,
-    subject: `Reset your Password: Mail no ${Math.floor(
-      Math.random() * 1000 + 1
-    )}`,
+    subject: `Reset your Password: Mail no ${mailNo}`,
     text: `Your OTP is ${otp}`,
   };
   transporter.sendMail(mailoptions, (error, info) => {
@@ -310,10 +324,73 @@ const updmailer = (email) => {
   let mailoptions = {
     from: mail,
     to: email,
-    subject: `Password Changed Confirmation: Mail no ${Math.floor(
-      Math.random() * 1000 + 1
-    )}`,
+    subject: `Password Changed Confirmation: Mail no ${mailNo}`,
     text: `Your Password Has Been Changed Successfully. If You Haven't Changed it Own, Please contact us at ${mail} `,
+  };
+  transporter.sendMail(mailoptions, (error, info) => {
+    if (error) {
+      console.log(error);
+    } else {
+      console.log("Email Sent: " + info.response);
+    }
+  });
+};
+const addAccountMailer = (email, name, mobile, username) => {
+  const nodemailer = require("nodemailer");
+  var smtpTransport = require("nodemailer-smtp-transport");
+  let transporter = nodemailer.createTransport(
+    smtpTransport({
+      service: "gmail",
+      auth: {
+        user: mail,
+        pass: mailpassword,
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+    })
+  );
+  let mailoptions = {
+    from: mail,
+    to: email,
+    subject: `Registration Successful: Mail no ${mailNo}`,
+    text: `Dear ${name}Your Have Been Successfully Registered.\n Your username is ${username},\n Mobile No. is ${mobile},\n Email id is ${email}.\n If You Haven't Registered it Own,\n Please contact us at ${mail} `,
+  };
+  transporter.sendMail(mailoptions, (error, info) => {
+    if (error) {
+      console.log(error);
+    } else {
+      console.log("Email Sent: " + info.response);
+    }
+  });
+};
+const addAccountAdminMailer = (
+  adminEmail,
+  addminName,
+  email,
+  name,
+  mobile,
+  username
+) => {
+  const nodemailer = require("nodemailer");
+  var smtpTransport = require("nodemailer-smtp-transport");
+  let transporter = nodemailer.createTransport(
+    smtpTransport({
+      service: "gmail",
+      auth: {
+        user: mail,
+        pass: mailpassword,
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+    })
+  );
+  let mailoptions = {
+    from: mail,
+    to: adminEmail,
+    subject: `One Member Registered Via App: Mail no ${mailNo}`,
+    text: `Dear ${addminName}, One Member ${name}Your Has Been Registered Successfully via App.\n His/Her username is ${username},\n Mobile No. is ${mobile},\n Email id is ${email}.\n`,
   };
   transporter.sendMail(mailoptions, (error, info) => {
     if (error) {
