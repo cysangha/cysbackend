@@ -883,7 +883,7 @@ const removeMemberByAdminMailer = (
   let mailoptions = {
     from: mail,
     to: adminEmail,
-    subject: `One Member Registered Via App: Mail no ${mailNo}`,
+    subject: `One Member ${member_name} Removed By Admin ${removedBy}: ${mailNo}`,
     text: `Dear ${addminName}, One Member ${member_name}, Son/ Daughter of ${father_name}, Member Id ${member_id}, Mobile No. is ${mobile}, Birth Date ${birthdate}, Access ${access} Has Been Removed By Admin ${removedBy}.\n  Reason is \n${removeMemberReason}`,
   };
   transporter.sendMail(mailoptions, (error, info) => {
