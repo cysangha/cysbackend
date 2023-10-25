@@ -1,20 +1,10 @@
 const Users = require("../models/users");
 const UsersApp = require("../models/usersApp");
 let Otp = require("../models/otp");
+let Admin = require("../models/admin");
 let NewMember = require("../models/member");
 let Payments = require("../models/payments");
 let PaymentsAdmin = require("../models/paymentsAdmin");
-
-let admins = [
-  {
-    name: "SK MAIDUL ISLAM",
-    email: "maidul365@gmail.com",
-  },
-  {
-    name: "CHITRASENPUR YUBAK SANGHA",
-    email: "chitrasenpuryubaksangha@gmail.com",
-  },
-];
 
 const delUser = async (req, res) => {
   let id = req.body.id;
@@ -33,13 +23,16 @@ const delUser = async (req, res) => {
   }
 };
 const delUserApp = async (req, res) => {
-  let id = req.body.id;
-  // res.json({ message: 'ok' })
-  // console.log(id)
+  let { id, email, name, removeBy } = req.body;
   try {
     let response = await UsersApp.deleteOne({ id: id });
     if (response.acknowledged) {
       res.status(200).json({ message: "ok", data: response });
+      delUserAppMailer(email, name, removeBy);
+      let admins = await Admin.find();
+      admins.map((el) =>
+        delUserAdminMailer(el.email, el.name, name, email, removeBy)
+      );
     } else {
       res.status(301).json({ message: "error", data: "Something Went Wrong" });
     }
@@ -84,6 +77,7 @@ const newMemberAdd = async (req, res) => {
     let response = await data.save();
     res.status(200).json({ message: "ok" });
     newMemberAddMailer(email, member_name, member_id, mobile);
+    let admins = await Admin.find();
     admins.map((el) =>
       newMemberAddAdminMailer(
         el.email,
@@ -94,6 +88,43 @@ const newMemberAdd = async (req, res) => {
         mobile
       )
     );
+  } catch (e) {
+    res.status(301).json({ message: "error", data: "Member Already Exists." });
+  }
+};
+const newAdminAdd = async (req, res) => {
+  let { name, email, addedBy } = req.body;
+  let data = await new Admin({
+    name,
+    email,
+    addedBy,
+  });
+  try {
+    let response = await data.save();
+    res.status(200).json({ message: "ok" });
+    newAdminMailer(email, name, addedBy);
+    let admins = await Admin.find();
+    admins.map((el) =>
+      newAdminAdminMailer(el.email, el.name, name, email, addedBy)
+    );
+  } catch (e) {
+    res.status(301).json({ message: "error", data: "Member Already Exists." });
+  }
+};
+const AdminRemove = async (req, res) => {
+  let { name, email, removeBy } = req.body;
+  let data = await new Admin.deleteOne({ email: email });
+  try {
+    if (response.acknowledged) {
+      res.status(200).json({ message: "ok", data: response });
+      AdminRemoveMailer(email, name, removeBy);
+      let admins = await Admin.find();
+      admins.map((el) =>
+        AdminRemoveAdminMailer(el.email, el.name, name, email, removeBy)
+      );
+    } else {
+      res.status(301).json({ message: "error", data: "Something Went Wrong" });
+    }
   } catch (e) {
     res.status(301).json({ message: "error", data: "Member Already Exists." });
   }
@@ -121,6 +152,7 @@ const newMemberAddByAdmin = async (req, res) => {
       amountPaid,
       addedBy
     );
+    let admins = await Admin.find();
     admins.map((el) =>
       newMemberAddByAdminAdminMailer(
         el.email,
@@ -175,6 +207,7 @@ const newPayment = async (req, res) => {
       purchasedByMobile,
       id
     );
+    let admins = await Admin.find();
     admins.map((el) =>
       newPaymentAdminMailer(
         el.email,
@@ -223,6 +256,7 @@ const newOnlinePaymentByAdmin = async (req, res) => {
     let response = await data.save();
     res.status(200).json({ message: "ok" });
 
+    let admins = await Admin.find();
     admins.map((el) =>
       newOnlinePaymentByAdminMailer(
         el.email,
@@ -272,6 +306,7 @@ const newOfflinePaymentByAdmin = async (req, res) => {
     let response = await data.save();
     res.status(200).json({ message: "ok" });
 
+    let admins = await Admin.find();
     admins.map((el) =>
       newOfflinePaymentByAdminMailer(
         el.email,
@@ -303,6 +338,7 @@ const removeMemberByAdmin = async (req, res) => {
   try {
     res.status(200).json({ message: "ok" });
 
+    let admins = await Admin.find();
     admins.map((el) =>
       removeMemberByAdminMailer(
         el.email,
@@ -391,6 +427,7 @@ const userAddApp = async (req, res) => {
     let response = await data.save();
     res.status(200).json({ message: "ok" });
     addAccountMailer(email, name, mobile, username);
+    let admins = await Admin.find();
     admins.map((el) =>
       addAccountAdminMailer(el.email, el.name, email, name, mobile, username)
     );
@@ -551,6 +588,66 @@ const mail = process.env.GMAIL;
 const mailpassword = process.env.GMAILPASSWORD;
 const mailNo = Math.floor(Math.random() * 1000 + 1);
 
+const delUserAppMailer = (email, name, removeBy) => {
+  const nodemailer = require("nodemailer");
+  var smtpTransport = require("nodemailer-smtp-transport");
+  let transporter = nodemailer.createTransport(
+    smtpTransport({
+      service: "gmail",
+      auth: {
+        user: mail,
+        pass: mailpassword,
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+    })
+  );
+  let mailoptions = {
+    from: mail,
+    to: email,
+    subject: `Your Account is Removed: Mail no ${mailNo}`,
+    text: `Dear ${name}, ${removeBy} Has Removed Account from CYS App.`,
+  };
+  transporter.sendMail(mailoptions, (error, info) => {
+    if (error) {
+      console.log(error);
+    } else {
+      console.log("Email Sent: " + info.response);
+    }
+  });
+};
+
+const delUserAdminMailer = (adminEmail, addminName, name, email, removeBy) => {
+  const nodemailer = require("nodemailer");
+  var smtpTransport = require("nodemailer-smtp-transport");
+  let transporter = nodemailer.createTransport(
+    smtpTransport({
+      service: "gmail",
+      auth: {
+        user: mail,
+        pass: mailpassword,
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+    })
+  );
+  let mailoptions = {
+    from: mail,
+    to: adminEmail,
+    subject: `${name} Registration is Removed from CYS App: Mail no ${mailNo}`,
+    text: `Dear ${addminName}, ${name} Registration is Removed from CYS App by ${removeBy},\n His Email id is ${email}.\n`,
+  };
+  transporter.sendMail(mailoptions, (error, info) => {
+    if (error) {
+      console.log(error);
+    } else {
+      console.log("Email Sent: " + info.response);
+    }
+  });
+};
+
 const mailer = (email, otp) => {
   const nodemailer = require("nodemailer");
   var smtpTransport = require("nodemailer-smtp-transport");
@@ -630,6 +727,128 @@ const addAccountMailer = (email, name, mobile, username) => {
     to: email,
     subject: `Registration Successful: Mail no ${mailNo}`,
     text: `Dear ${name} You Have Been Successfully Registered.\n Your username is ${username},\n Mobile No. is ${mobile},\n Email id is ${email}.\n If You Haven't Registered it Own,\n Please contact us at ${mail} `,
+  };
+  transporter.sendMail(mailoptions, (error, info) => {
+    if (error) {
+      console.log(error);
+    } else {
+      console.log("Email Sent: " + info.response);
+    }
+  });
+};
+const AdminRemoveMailer = (email, name, removeBy) => {
+  const nodemailer = require("nodemailer");
+  var smtpTransport = require("nodemailer-smtp-transport");
+  let transporter = nodemailer.createTransport(
+    smtpTransport({
+      service: "gmail",
+      auth: {
+        user: mail,
+        pass: mailpassword,
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+    })
+  );
+  let mailoptions = {
+    from: mail,
+    to: email,
+    subject: `Your Admin Access is Removed: Mail no ${mailNo}`,
+    text: `Dear ${name}, ${removeBy} Has Removed You from Admin of CYS App. Please Logout of App and Re Login.`,
+  };
+  transporter.sendMail(mailoptions, (error, info) => {
+    if (error) {
+      console.log(error);
+    } else {
+      console.log("Email Sent: " + info.response);
+    }
+  });
+};
+const AdminRemoveAdminMailer = (
+  adminEmail,
+  addminName,
+  name,
+  email,
+  removeBy
+) => {
+  const nodemailer = require("nodemailer");
+  var smtpTransport = require("nodemailer-smtp-transport");
+  let transporter = nodemailer.createTransport(
+    smtpTransport({
+      service: "gmail",
+      auth: {
+        user: mail,
+        pass: mailpassword,
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+    })
+  );
+  let mailoptions = {
+    from: mail,
+    to: adminEmail,
+    subject: `${name} is From Admin of CYS App: Mail no ${mailNo}`,
+    text: `Dear ${addminName}, One Admin ${name} Has Been Removed from Admin of CYS app by ${removeBy},\n His Email id is ${email}.\n`,
+  };
+  transporter.sendMail(mailoptions, (error, info) => {
+    if (error) {
+      console.log(error);
+    } else {
+      console.log("Email Sent: " + info.response);
+    }
+  });
+};
+const newAdminMailer = (email, name, addedBy) => {
+  const nodemailer = require("nodemailer");
+  var smtpTransport = require("nodemailer-smtp-transport");
+  let transporter = nodemailer.createTransport(
+    smtpTransport({
+      service: "gmail",
+      auth: {
+        user: mail,
+        pass: mailpassword,
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+    })
+  );
+  let mailoptions = {
+    from: mail,
+    to: email,
+    subject: `You Are Now An Admin: Mail no ${mailNo}`,
+    text: `Dear ${name}, ${addedBy} Has Choosen You As an Admin of CYS App. Please Logout of App and Re Login.`,
+  };
+  transporter.sendMail(mailoptions, (error, info) => {
+    if (error) {
+      console.log(error);
+    } else {
+      console.log("Email Sent: " + info.response);
+    }
+  });
+};
+const newAdminAdminMailer = (adminEmail, addminName, name, email, addedBy) => {
+  const nodemailer = require("nodemailer");
+  var smtpTransport = require("nodemailer-smtp-transport");
+  let transporter = nodemailer.createTransport(
+    smtpTransport({
+      service: "gmail",
+      auth: {
+        user: mail,
+        pass: mailpassword,
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+    })
+  );
+  let mailoptions = {
+    from: mail,
+    to: adminEmail,
+    subject: `${name} is Now An Admin of CYS App: Mail no ${mailNo}`,
+    text: `Dear ${addminName}, One Member ${name} Has Been Choosen As an Admin of CYS app by ${addedBy},\n His Email id is ${email}.\n`,
   };
   transporter.sendMail(mailoptions, (error, info) => {
     if (error) {
@@ -1027,4 +1246,6 @@ module.exports = {
   newOfflinePaymentByAdmin,
   removeMemberByAdmin,
   newMemberAddByAdmin,
+  newAdminAdd,
+  AdminRemove,
 };
