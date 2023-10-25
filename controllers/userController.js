@@ -98,6 +98,46 @@ const newMemberAdd = async (req, res) => {
     res.status(301).json({ message: "error", data: "Member Already Exists." });
   }
 };
+const newMemberAddByAdmin = async (req, res) => {
+  let {
+    member_name,
+    father_name,
+    member_id,
+    mobile,
+    birthdate,
+    email,
+    amountPaid,
+    addedBy,
+  } = req.body;
+
+  try {
+    res.status(200).json({ message: "ok" });
+    newMemberAddByAdminMailer(
+      email,
+      member_name,
+      father_name,
+      member_id,
+      mobile,
+      amountPaid,
+      addedBy
+    );
+    admins.map((el) =>
+      newMemberAddByAdminAdminMailer(
+        el.email,
+        el.name,
+        member_name,
+        father_name,
+        email,
+        member_id,
+        mobile,
+        amountPaid,
+        addedBy
+      )
+    );
+  } catch (e) {
+    res.status(301).json({ message: "error", data: "Member Already Exists." });
+  }
+};
 const newPayment = async (req, res) => {
   let {
     id,
@@ -664,6 +704,82 @@ const newMemberAddAdminMailer = (
     }
   });
 };
+const newMemberAddByAdminMailer = (
+  email,
+  name,
+  father_name,
+  member_id,
+  mobile,
+  amountPaid,
+  addedBy
+) => {
+  const nodemailer = require("nodemailer");
+  var smtpTransport = require("nodemailer-smtp-transport");
+  let transporter = nodemailer.createTransport(
+    smtpTransport({
+      service: "gmail",
+      auth: {
+        user: mail,
+        pass: mailpassword,
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+    })
+  );
+  let mailoptions = {
+    from: mail,
+    to: email,
+    subject: `Member Registration By Admin Successful: Mail no ${mailNo}`,
+    text: `Dear ${name}, Son/Daughter of ${father_name} Your Membership Has Been Successfully Registered.\n Your Member ID is ${member_id},\n Mobile No. is ${mobile},\n Email id is ${email}.\n You Have Made a Successful Payment of Rs. ${amountPaid} to ${addedBy}. `,
+  };
+  transporter.sendMail(mailoptions, (error, info) => {
+    if (error) {
+      console.log(error);
+    } else {
+      console.log("Email Sent: " + info.response);
+    }
+  });
+};
+const newMemberAddByAdminAdminMailer = (
+  adminEmail,
+  addminName,
+  member_name,
+  father_name,
+  email,
+  member_id,
+  mobile,
+  amountPaid,
+  addedBy
+) => {
+  const nodemailer = require("nodemailer");
+  var smtpTransport = require("nodemailer-smtp-transport");
+  let transporter = nodemailer.createTransport(
+    smtpTransport({
+      service: "gmail",
+      auth: {
+        user: mail,
+        pass: mailpassword,
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+    })
+  );
+  let mailoptions = {
+    from: mail,
+    to: adminEmail,
+    subject: `One Member Registered By ${addedBy} Via App: Mail no ${mailNo}`,
+    text: `Dear ${addminName}, One Member ${member_name}, Son/ Daughter of ${father_name} Has Been Registered Successfully By ${addedBy} via App.\n His/Her Member ID is ${member_id},\n Mobile No. is ${mobile},\n Email id is ${email}.\n He/She Paid Rs. ${amountPaid} to ${addedBy}`,
+  };
+  transporter.sendMail(mailoptions, (error, info) => {
+    if (error) {
+      console.log(error);
+    } else {
+      console.log("Email Sent: " + info.response);
+    }
+  });
+};
 const newPaymentMailer = (email, name, pricePaid, membershipPeriod, id) => {
   const nodemailer = require("nodemailer");
   var smtpTransport = require("nodemailer-smtp-transport");
@@ -910,4 +1026,5 @@ module.exports = {
   newOnlinePaymentByAdmin,
   newOfflinePaymentByAdmin,
   removeMemberByAdmin,
+  newMemberAddByAdmin,
 };
