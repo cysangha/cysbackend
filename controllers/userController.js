@@ -789,7 +789,7 @@ const AdminRemoveAdminMailer = (
   let mailoptions = {
     from: mail,
     to: adminEmail,
-    subject: `${name} is From Admin of CYS App: Mail no ${mailNo}`,
+    subject: `${name} is Removed From Admin of CYS App: Mail no ${mailNo}`,
     text: `Dear ${addminName}, One Admin ${name} Has Been Removed from Admin of CYS app by ${removeBy},\n His Email id is ${email}.\n`,
   };
   transporter.sendMail(mailoptions, (error, info) => {
