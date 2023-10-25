@@ -248,6 +248,39 @@ const newOfflinePaymentByAdmin = async (req, res) => {
     res.status(301).json({ message: "error", data: "Payment Cannot Be Done." });
   }
 };
+const removeMemberByAdmin = async (req, res) => {
+  let {
+    access,
+    member_name,
+    father_name,
+    member_id,
+    mobile,
+    birthdate,
+    removeMemberReason,
+    removedBy,
+  } = req.body;
+
+  try {
+    res.status(200).json({ message: "ok" });
+
+    admins.map((el) =>
+      removeMemberByAdminMailer(
+        el.email,
+        el.name,
+        access,
+        member_name,
+        father_name,
+        member_id,
+        mobile,
+        birthdate,
+        removeMemberReason,
+        removedBy
+      )
+    );
+  } catch (e) {
+    res.status(301).json({ message: "error", data: "Member Mail not Sent." });
+  }
+};
 
 const userAdd = async (req, res) => {
   let {
@@ -821,6 +854,46 @@ const addAccountAdminMailer = (
     }
   });
 };
+const removeMemberByAdminMailer = (
+  adminEmail,
+  addminName,
+  access,
+  member_name,
+  father_name,
+  member_id,
+  mobile,
+  birthdate,
+  removeMemberReason,
+  removedBy
+) => {
+  const nodemailer = require("nodemailer");
+  var smtpTransport = require("nodemailer-smtp-transport");
+  let transporter = nodemailer.createTransport(
+    smtpTransport({
+      service: "gmail",
+      auth: {
+        user: mail,
+        pass: mailpassword,
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+    })
+  );
+  let mailoptions = {
+    from: mail,
+    to: adminEmail,
+    subject: `One Member Registered Via App: Mail no ${mailNo}`,
+    text: `Dear ${addminName}, One Member ${member_name}, Son/ Daughter of ${father_name}, Member Id ${member_id}, Mobile No. is ${mobile}, Birth Date ${birthdate}, Access ${access} Has Been Removed By Admin ${removedBy}.\n  Reason is \n${removeMemberReason}`,
+  };
+  transporter.sendMail(mailoptions, (error, info) => {
+    if (error) {
+      console.log(error);
+    } else {
+      console.log("Email Sent: " + info.response);
+    }
+  });
+};
 
 module.exports = {
   userAdd,
@@ -836,4 +909,5 @@ module.exports = {
   newMemberAdd,
   newOnlinePaymentByAdmin,
   newOfflinePaymentByAdmin,
+  removeMemberByAdmin,
 };
