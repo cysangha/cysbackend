@@ -113,7 +113,7 @@ const newAdminAdd = async (req, res) => {
 };
 const AdminRemove = async (req, res) => {
   let { name, email, removeBy } = req.body;
-  let data = await Admin.deleteOne({ email: email });
+  let response = await Admin.deleteOne({ email: email });
   try {
     if (response.acknowledged) {
       res.status(200).json({ message: "ok", data: response });
