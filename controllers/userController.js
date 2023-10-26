@@ -111,6 +111,57 @@ const newAdminAdd = async (req, res) => {
     res.status(301).json({ message: "error", data: "Member Already Exists." });
   }
 };
+const newMemberToAdminAdd = async (req, res) => {
+  let { name, email, addedBy, purpose } = req.body;
+  let data = await new Admin({
+    name,
+    email,
+    addedBy,
+    purpose,
+  });
+  try {
+    let response = await data.save();
+    res.status(200).json({ message: "ok" });
+    newAdminMailer(email, name, addedBy);
+    let admins = await Admin.find();
+    admins.map((el) =>
+      newMemberToAdminAmdinMailer(
+        el.email,
+        el.name,
+        name,
+        email,
+        addedBy,
+        purpose
+      )
+    );
+  } catch (e) {
+    res.status(301).json({ message: "error", data: "Member Already Exists." });
+  }
+};
+const newAdminToMemberAdd = async (req, res) => {
+  let { name, email, addedBy, purpose } = req.body;
+  let data = await new Admin({
+    name,
+    email,
+    addedBy,
+    purpose,
+  });
+  let response = await Admin.deleteOne({ email: email });
+  try {
+    if (response.acknowledged) {
+      res.status(200).json({ message: "ok", data: response });
+      AdminRemoveMailer(email, name, removeBy);
+      let admins = await Admin.find();
+      admins.map((el) =>
+        newAdminToMemberAdminMailer(el.email, el.name, name, email, removeBy)
+      );
+    } else {
+      res.status(301).json({ message: "error", data: "Something Went Wrong" });
+    }
+  } catch (e) {
+    res.status(301).json({ message: "error", data: "Member Already Exists." });
+  }
+};
 const AdminRemove = async (req, res) => {
   let { name, email, removeBy } = req.body;
   let response = await Admin.deleteOne({ email: email });
@@ -858,6 +909,78 @@ const newAdminAdminMailer = (adminEmail, addminName, name, email, addedBy) => {
     }
   });
 };
+const newMemberToAdminAmdinMailer = (
+  adminEmail,
+  addminName,
+  name,
+  email,
+  addedBy,
+  purpose
+) => {
+  const nodemailer = require("nodemailer");
+  var smtpTransport = require("nodemailer-smtp-transport");
+  let transporter = nodemailer.createTransport(
+    smtpTransport({
+      service: "gmail",
+      auth: {
+        user: mail,
+        pass: mailpassword,
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+    })
+  );
+  let mailoptions = {
+    from: mail,
+    to: adminEmail,
+    subject: `${name} is Now An Admin of CYS App: Mail no ${mailNo}`,
+    text: `Dear ${addminName}, One Member ${name} Has Been Choosen As an Admin of CYS app by ${addedBy} from Member To Admin from The Member Section,\n Reason is\n ${purpose} His Email id is ${email}.\n`,
+  };
+  transporter.sendMail(mailoptions, (error, info) => {
+    if (error) {
+      console.log(error);
+    } else {
+      console.log("Email Sent: " + info.response);
+    }
+  });
+};
+const newAdminToMemberAdminMailer = (
+  adminEmail,
+  addminName,
+  name,
+  email,
+  addedBy,
+  purpose
+) => {
+  const nodemailer = require("nodemailer");
+  var smtpTransport = require("nodemailer-smtp-transport");
+  let transporter = nodemailer.createTransport(
+    smtpTransport({
+      service: "gmail",
+      auth: {
+        user: mail,
+        pass: mailpassword,
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+    })
+  );
+  let mailoptions = {
+    from: mail,
+    to: adminEmail,
+    subject: `${name} is Removed from Admin of CYS App: Mail no ${mailNo}`,
+    text: `Dear ${addminName}, One Member ${name} Has Been Removed from Admin of CYS app by ${addedBy} from Admin To Member from The Member Section,\n Reason is\n ${purpose} His Email id is ${email}.\n`,
+  };
+  transporter.sendMail(mailoptions, (error, info) => {
+    if (error) {
+      console.log(error);
+    } else {
+      console.log("Email Sent: " + info.response);
+    }
+  });
+};
 const newMemberAddMailer = (email, name, member_id, mobile) => {
   const nodemailer = require("nodemailer");
   var smtpTransport = require("nodemailer-smtp-transport");
@@ -1248,4 +1371,6 @@ module.exports = {
   newMemberAddByAdmin,
   newAdminAdd,
   AdminRemove,
+  newMemberToAdminAdd,
+  newAdminToMemberAdd,
 };
