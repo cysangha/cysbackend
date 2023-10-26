@@ -474,14 +474,41 @@ const userAddApp = async (req, res) => {
     memberID,
     date,
   });
+
   try {
     let response = await data.save();
+    if (access === "admin") {
+      let addedBy = name;
+      let adminData = await new Admin({
+        email,
+        name,
+        addedBy,
+      });
+      try {
+        let adminResponse = await adminData.save();
+        addAccountAndAdminMailer(email, name, mobile, username);
+        let admins = await Admin.find();
+        admins.map((el) =>
+          addAccountAndAdminAdminMailer(
+            el.email,
+            el.name,
+            email,
+            name,
+            mobile,
+            username
+          )
+        );
+      } catch (e) {
+        console.log(e);
+      }
+    } else {
+      addAccountMailer(email, name, mobile, username);
+      let admins = await Admin.find();
+      admins.map((el) =>
+        addAccountAdminMailer(el.email, el.name, email, name, mobile, username)
+      );
+    }
     res.status(200).json({ message: "ok" });
-    addAccountMailer(email, name, mobile, username);
-    let admins = await Admin.find();
-    admins.map((el) =>
-      addAccountAdminMailer(el.email, el.name, email, name, mobile, username)
-    );
   } catch (e) {
     res.status(301).json({ message: "error", data: "User Already Exists." });
     console.log(e);
@@ -778,6 +805,35 @@ const addAccountMailer = (email, name, mobile, username) => {
     to: email,
     subject: `Registration Successful: Mail no ${mailNo}`,
     text: `Dear ${name} You Have Been Successfully Registered.\n Your username is ${username},\n Mobile No. is ${mobile},\n Email id is ${email}.\n If You Haven't Registered it Own,\n Please contact us at ${mail} `,
+  };
+  transporter.sendMail(mailoptions, (error, info) => {
+    if (error) {
+      console.log(error);
+    } else {
+      console.log("Email Sent: " + info.response);
+    }
+  });
+};
+const addAccountAndAdminMailer = (email, name, mobile, username) => {
+  const nodemailer = require("nodemailer");
+  var smtpTransport = require("nodemailer-smtp-transport");
+  let transporter = nodemailer.createTransport(
+    smtpTransport({
+      service: "gmail",
+      auth: {
+        user: mail,
+        pass: mailpassword,
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+    })
+  );
+  let mailoptions = {
+    from: mail,
+    to: email,
+    subject: `Registration Successful: Mail no ${mailNo}`,
+    text: `Dear ${name} You Have Been Successfully Registered And Became Admin as you were Admin in Member Databse.\n Your username is ${username},\n Mobile No. is ${mobile},\n Email id is ${email}.\n If You Haven't Registered it Own,\n Please contact us at ${mail} `,
   };
   transporter.sendMail(mailoptions, (error, info) => {
     if (error) {
@@ -1303,6 +1359,42 @@ const addAccountAdminMailer = (
     to: adminEmail,
     subject: `One Member Registered Via App: Mail no ${mailNo}`,
     text: `Dear ${addminName}, One Member ${name} Has Been Registered Successfully via App.\n His/Her username is ${username},\n Mobile No. is ${mobile},\n Email id is ${email}.\n`,
+  };
+  transporter.sendMail(mailoptions, (error, info) => {
+    if (error) {
+      console.log(error);
+    } else {
+      console.log("Email Sent: " + info.response);
+    }
+  });
+};
+const addAccountAndAdminAdminMailer = (
+  adminEmail,
+  addminName,
+  email,
+  name,
+  mobile,
+  username
+) => {
+  const nodemailer = require("nodemailer");
+  var smtpTransport = require("nodemailer-smtp-transport");
+  let transporter = nodemailer.createTransport(
+    smtpTransport({
+      service: "gmail",
+      auth: {
+        user: mail,
+        pass: mailpassword,
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+    })
+  );
+  let mailoptions = {
+    from: mail,
+    to: adminEmail,
+    subject: `One Member Registered Via App: Mail no ${mailNo}`,
+    text: `Dear ${addminName}, One Member ${name} Has Been Registered And Became Admin Successfully As He/She was an Existing Admin in Member Database.\n His/Her username is ${username},\n Mobile No. is ${mobile},\n Email id is ${email}.\n`,
   };
   transporter.sendMail(mailoptions, (error, info) => {
     if (error) {
