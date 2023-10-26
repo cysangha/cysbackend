@@ -7,6 +7,8 @@ router.use(bodyParser.urlencoded({ extended: false }));
 router.use(bodyParser.json());
 
 router.post("/newAdminAdd", userCtrl.newAdminAdd);
+router.post("/newMemberToAdminAdd", userCtrl.newMemberToAdminAdd);
+router.post("/newAdminToMemberAdd", userCtrl.newAdminToMemberAdd);
 router.post("/AdminRemove", userCtrl.AdminRemove);
 router.post("/newMemberAdd", userCtrl.newMemberAdd);
 router.post("/newMemberAddByAdmin", userCtrl.newMemberAddByAdmin);
