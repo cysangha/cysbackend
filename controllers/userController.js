@@ -4,6 +4,7 @@ let Otp = require("../models/otp");
 let Admin = require("../models/admin");
 let NewMember = require("../models/member");
 let Payments = require("../models/payments");
+let Donations = require("../models/donations");
 let PaymentsAdmin = require("../models/paymentsAdmin");
 
 const delUser = async (req, res) => {
@@ -254,6 +255,7 @@ const newPayment = async (req, res) => {
     newPaymentMailer(
       purchasedByEmail,
       member_name,
+      pricePaid,
       purchasedByID,
       purchasedByMobile,
       id
@@ -267,7 +269,58 @@ const newPayment = async (req, res) => {
         pricePaid,
         id,
         membershipPeriod,
-        purchasedByMobile
+        purchasedByMobile,
+        purchasedByEmail
+      )
+    );
+  } catch (e) {
+    res.status(301).json({ message: "error", data: "Payment Cannot Be Done." });
+  }
+};
+const newDonation = async (req, res) => {
+  let {
+    id,
+    paymentID,
+    donatedByID,
+    donatedByName,
+    donatedByMobile,
+    donatedByEmail,
+    type,
+    date,
+    donationAmount,
+  } = req.body;
+  let data = await new Donations({
+    id,
+    paymentID,
+    donatedByID,
+    donatedByName,
+    donatedByMobile,
+    donatedByEmail,
+    type,
+    date,
+    donationAmount,
+  });
+  try {
+    let response = await data.save();
+    res.status(200).json({ message: "ok" });
+    newDonationMailer(
+      donatedByEmail,
+      donatedByName,
+      donationAmount,
+      donatedByID,
+      donatedByMobile,
+      id
+    );
+    let admins = await Admin.find();
+    admins.map((el) =>
+      newDonationAdminMailer(
+        el.email,
+        el.name,
+        donatedByName,
+        donationAmount,
+        id,
+        donatedByMobile,
+        donatedByEmail
       )
     );
   } catch (e) {
@@ -1214,7 +1267,8 @@ const newPaymentAdminMailer = (
   pricePaid,
   id,
   membershipPeriod,
-  mobile
+  mobile,
+  email
 ) => {
   const nodemailer = require("nodemailer");
   var smtpTransport = require("nodemailer-smtp-transport");
@@ -1239,6 +1293,72 @@ const newPaymentAdminMailer = (
         ? `${membershipPeriod} Months`
         : `${membershipPeriod} Month`
     }. `,
+  };
+  transporter.sendMail(mailoptions, (error, info) => {
+    if (error) {
+      console.log(error);
+    } else {
+      console.log("Email Sent: " + info.response);
+    }
+  });
+};
+const newDonationMailer = (email, name, donationAmount, id) => {
+  const nodemailer = require("nodemailer");
+  var smtpTransport = require("nodemailer-smtp-transport");
+  let transporter = nodemailer.createTransport(
+    smtpTransport({
+      service: "gmail",
+      auth: {
+        user: mail,
+        pass: mailpassword,
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+    })
+  );
+  let mailoptions = {
+    from: mail,
+    to: email,
+    subject: `Your Donation of Rs. ${donationAmount} is Successful: Mail no ${mailNo}`,
+    text: `Dear ${name} Your Payment of Rs. ${donationAmount} is Successful.\n Your Donation Id is ${id}.\n A Lots of Thanks from Chitrasenpur Yubak Sangha.\n If You Have any complain,\n Please contact us at ${mail}.\n `,
+  };
+  transporter.sendMail(mailoptions, (error, info) => {
+    if (error) {
+      console.log(error);
+    } else {
+      console.log("Email Sent: " + info.response);
+    }
+  });
+};
+const newDonationAdminMailer = (
+  adminEmail,
+  addminName,
+  name,
+  donationAmount,
+  id,
+  donatedByMobile,
+  donatedByEmail
+) => {
+  const nodemailer = require("nodemailer");
+  var smtpTransport = require("nodemailer-smtp-transport");
+  let transporter = nodemailer.createTransport(
+    smtpTransport({
+      service: "gmail",
+      auth: {
+        user: mail,
+        pass: mailpassword,
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+    })
+  );
+  let mailoptions = {
+    from: mail,
+    to: adminEmail,
+    subject: `${name} Made a Payment of Rs. ${pricePaid}: Mail no ${mailNo}`,
+    text: `Dear ${addminName}, ${name} Made a Donation of Rs. ${donationAmount} via App.\n His/Her Payment ID is ${id},\n Mobile No. is ${donatedByMobile},\n Email id is ${donatedByEmail}.\n . `,
   };
   transporter.sendMail(mailoptions, (error, info) => {
     if (error) {
@@ -1465,4 +1585,5 @@ module.exports = {
   AdminRemove,
   newMemberToAdminAdd,
   newAdminToMemberAdd,
+  newDonation,
 };
