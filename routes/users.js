@@ -12,6 +12,7 @@ router.post("/newAdminToMemberAdd", userCtrl.newAdminToMemberAdd);
 router.post("/AdminRemove", userCtrl.AdminRemove);
 router.post("/newMemberAdd", userCtrl.newMemberAdd);
 router.post("/newMemberAddByAdmin", userCtrl.newMemberAddByAdmin);
+router.post("/newDonation", userCtrl.newDonation);
 router.post("/newPayment", userCtrl.newPayment);
 router.post("/newOnlinePaymentByAdmin", userCtrl.newOnlinePaymentByAdmin);
 router.post("/newOfflinePaymentByAdmin", userCtrl.newOfflinePaymentByAdmin);
