@@ -6,6 +6,7 @@ let NewMember = require("../models/member");
 let Payments = require("../models/payments");
 let Donations = require("../models/donations");
 let PaymentsAdmin = require("../models/paymentsAdmin");
+let FundraiserPayments = require("../models/fundraiserPayment");
 
 const delUser = async (req, res) => {
   let id = req.body.id;
@@ -321,6 +322,62 @@ const newDonation = async (req, res) => {
         id,
         donatedByMobile,
         donatedByEmail
+      )
+    );
+  } catch (e) {
+    res.status(301).json({ message: "error", data: "Payment Cannot Be Done." });
+  }
+};
+const newFundraiserPayment = async (req, res) => {
+  let {
+    id,
+    transactionID,
+    eventName,
+    eventID,
+    addedBy,
+    paymentByName,
+    paymentById,
+    paymentByMobile,
+    paymentByEmail,
+    amount,
+    previousAmount,
+    currentAmount,
+  } = req.body;
+  let data = await new FundraiserPayments({
+    id,
+    transactionID,
+    eventName,
+    eventID,
+    addedBy,
+    paymentByName,
+    paymentById,
+    paymentByMobile,
+    paymentByEmail,
+    amount,
+    previousAmount,
+    currentAmount,
+  });
+  try {
+    let response = await data.save();
+    res.status(200).json({ message: "ok" });
+    newFundRaiserMailer(
+      paymentByEmail,
+      paymentByName,
+      amount,
+      paymentById,
+      paymentByMobile,
+      id
+    );
+    let admins = await Admin.find();
+    admins.map((el) =>
+      newFundraiserAdminMailer(
+        el.email,
+        el.name,
+        paymentByName,
+        amount,
+        id,
+        paymentByMobile,
+        paymentByEmail
       )
     );
   } catch (e) {
@@ -1368,6 +1425,72 @@ const newDonationAdminMailer = (
     }
   });
 };
+const newFundRaiserMailer = (email, name, donationAmount, id) => {
+  const nodemailer = require("nodemailer");
+  var smtpTransport = require("nodemailer-smtp-transport");
+  let transporter = nodemailer.createTransport(
+    smtpTransport({
+      service: "gmail",
+      auth: {
+        user: mail,
+        pass: mailpassword,
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+    })
+  );
+  let mailoptions = {
+    from: mail,
+    to: email,
+    subject: `Your Fundraiser Payment of Rs. ${donationAmount} is Successful: Mail no ${mailNo}`,
+    text: `Dear ${name} Your Fundraiser Payment of Rs. ${donationAmount} is Successful.\n Your Donation Id is ${id}.\n A Lots of Thanks from Chitrasenpur Yubak Sangha.\n If You Have any complain,\n Please contact us at ${mail}.\n `,
+  };
+  transporter.sendMail(mailoptions, (error, info) => {
+    if (error) {
+      console.log(error);
+    } else {
+      console.log("Email Sent: " + info.response);
+    }
+  });
+};
+const newFundraiserAdminMailer = (
+  adminEmail,
+  addminName,
+  name,
+  donationAmount,
+  id,
+  donatedByMobile,
+  donatedByEmail
+) => {
+  const nodemailer = require("nodemailer");
+  var smtpTransport = require("nodemailer-smtp-transport");
+  let transporter = nodemailer.createTransport(
+    smtpTransport({
+      service: "gmail",
+      auth: {
+        user: mail,
+        pass: mailpassword,
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+    })
+  );
+  let mailoptions = {
+    from: mail,
+    to: adminEmail,
+    subject: `${name} Made a Funraiser Payment of Rs. ${pricePaid}: Mail no ${mailNo}`,
+    text: `Dear ${addminName}, ${name} Made a Fundraiser Payment of Rs. ${donationAmount} via App.\n His/Her Payment ID is ${id},\n Mobile No. is ${donatedByMobile},\n Email id is ${donatedByEmail}.\n . `,
+  };
+  transporter.sendMail(mailoptions, (error, info) => {
+    if (error) {
+      console.log(error);
+    } else {
+      console.log("Email Sent: " + info.response);
+    }
+  });
+};
 const newOnlinePaymentByAdminMailer = (
   adminEmail,
   addminName,
@@ -1586,4 +1709,5 @@ module.exports = {
   newMemberToAdminAdd,
   newAdminToMemberAdd,
   newDonation,
+  newFundraiserPayment,
 };
