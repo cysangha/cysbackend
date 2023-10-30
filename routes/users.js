@@ -15,6 +15,7 @@ router.post("/newMemberAddByAdmin", userCtrl.newMemberAddByAdmin);
 router.post("/newDonation", userCtrl.newDonation);
 router.post("/newPayment", userCtrl.newPayment);
 router.post("/newFundraiser", userCtrl.newFundraiser);
+router.post("/fundraisersEventRemove", userCtrl.fundraisersEventRemove);
 router.post("/newFundraiserPayment", userCtrl.newFundraiserPayment);
 router.post("/newOnlinePaymentByAdmin", userCtrl.newOnlinePaymentByAdmin);
 router.post("/newOfflinePaymentByAdmin", userCtrl.newOfflinePaymentByAdmin);
