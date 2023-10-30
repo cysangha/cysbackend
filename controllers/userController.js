@@ -184,7 +184,7 @@ const AdminRemove = async (req, res) => {
   }
 };
 const newFundraiser = async (req, res) => {
-  let { id, addedByUsersName, addedBy, eventName, targetAmount, minimumPay } =
+  let { id, addedByUsersName,addedByUsersEmail, addedBy, eventName, targetAmount, minimumPay } =
     req.body;
   let data = await new Fundraisers({
     id,
