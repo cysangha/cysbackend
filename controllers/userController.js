@@ -183,9 +183,40 @@ const AdminRemove = async (req, res) => {
     res.status(301).json({ message: "error", data: "Member Already Exists." });
   }
 };
+const fundraisersEventRemove = async (req, res) => {
+  let { id, deletedByUsername, deletedByUserEmail, eventName } = req.body;
+  let response = await Fundraisers.deleteOne({ id: id });
+  try {
+    if (response.acknowledged) {
+      res.status(200).json({ message: "ok", data: response });
+
+      let admins = await Admin.find();
+      admins.map((el) =>
+        fundraiserEventRemoveAdminMailer(
+          el.email,
+          el.name,
+          deletedByUsername,
+          deletedByUserEmail,
+          eventName
+        )
+      );
+    } else {
+      res.status(301).json({ message: "error", data: "Something Went Wrong" });
+    }
+  } catch (e) {
+    res.status(301).json({ message: "error", data: "Member Already Exists." });
+  }
+};
 const newFundraiser = async (req, res) => {
-  let { id, addedByUsersName,addedByUsersEmail, addedBy, eventName, targetAmount, minimumPay } =
-    req.body;
+  let {
+    id,
+    addedByUsersName,
+    addedByUsersEmail,
+    addedBy,
+    eventName,
+    targetAmount,
+    minimumPay,
+  } = req.body;
   let data = await new Fundraisers({
     id,
     addedByUsersName,
@@ -1548,10 +1579,45 @@ const newFundraiserEventAdminMailer = (
     })
   );
   let mailoptions = {
-    from: mail,
+    from: addedByUsersEmail,
     to: adminEmail,
-    subject: `${addedByUsersEmail} Added a New Funraiser of Rs. ${targetAmount}: Mail no ${mailNo}`,
+    subject: `${name} Added a New Funraiser of Rs. ${targetAmount}: Mail no ${mailNo}`,
     text: `Dear ${addminName}, ${name} has Created a New Funraiser Event of Rs. ${targetAmount} via App.\nFundriser Event Name is:\n${eventName}.\nMinimum Amount He/She set is Rs. ${minimumPay}. `,
+  };
+  transporter.sendMail(mailoptions, (error, info) => {
+    if (error) {
+      console.log(error);
+    } else {
+      console.log("Email Sent: " + info.response);
+    }
+  });
+};
+const fundraiserEventRemoveAdminMailer = (
+  adminEmail,
+  addminName,
+  name,
+  deletedByUserEmail,
+  eventName
+) => {
+  const nodemailer = require("nodemailer");
+  var smtpTransport = require("nodemailer-smtp-transport");
+  let transporter = nodemailer.createTransport(
+    smtpTransport({
+      service: "gmail",
+      auth: {
+        user: mail,
+        pass: mailpassword,
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+    })
+  );
+  let mailoptions = {
+    from: deletedByUserEmail,
+    to: adminEmail,
+    subject: `${addminName} Deleted a Funraiser : Mail no ${mailNo}`,
+    text: `Dear ${addminName}, ${name} has Deleted a Funraiser Event via App.\nFundriser Event Name is:\n${eventName}.\n `,
   };
   transporter.sendMail(mailoptions, (error, info) => {
     if (error) {
@@ -1781,4 +1847,5 @@ module.exports = {
   newDonation,
   newFundraiserPayment,
   newFundraiser,
+  fundraisersEventRemove,
 };
