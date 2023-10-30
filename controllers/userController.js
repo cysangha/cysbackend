@@ -1616,7 +1616,7 @@ const fundraiserEventRemoveAdminMailer = (
   let mailoptions = {
     from: deletedByUserEmail,
     to: adminEmail,
-    subject: `${addminName} Deleted a Funraiser : Mail no ${mailNo}`,
+    subject: `${name} Deleted a Funraiser : Mail no ${mailNo}`,
     text: `Dear ${addminName}, ${name} has Deleted a Funraiser Event via App.\nFundriser Event Name is:\n${eventName}.\n `,
   };
   transporter.sendMail(mailoptions, (error, info) => {
