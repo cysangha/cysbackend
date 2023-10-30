@@ -7,6 +7,7 @@ let Payments = require("../models/payments");
 let Donations = require("../models/donations");
 let PaymentsAdmin = require("../models/paymentsAdmin");
 let FundraiserPayments = require("../models/fundraiserPayment");
+let Fundraisers = require("../models/fundraisers");
 
 const delUser = async (req, res) => {
   let id = req.body.id;
@@ -180,6 +181,38 @@ const AdminRemove = async (req, res) => {
     }
   } catch (e) {
     res.status(301).json({ message: "error", data: "Member Already Exists." });
+  }
+};
+const newFundraiser = async (req, res) => {
+  let { id, addedByUsersName, addedBy, eventName, targetAmount, minimumPay } =
+    req.body;
+  let data = await new Fundraisers({
+    id,
+    addedByUsersName,
+    addedByUsersEmail,
+    addedBy,
+    eventName,
+    targetAmount,
+    minimumPay,
+  });
+  try {
+    let response = await data.save();
+    res.status(200).json({ message: "ok" });
+
+    let admins = await Admin.find();
+    admins.map((el) =>
+      newFundraiserEventAdminMailer(
+        el.email,
+        el.name,
+        addedByUsersName,
+        addedByUsersEmail,
+        eventName,
+        targetAmount,
+        minimumPay
+      )
+    );
+  } catch (e) {
+    res.status(301).json({ message: "error", data: "Can't Add Fundraisers" });
   }
 };
 const newMemberAddByAdmin = async (req, res) => {
@@ -1491,6 +1524,43 @@ const newFundraiserAdminMailer = (
     }
   });
 };
+const newFundraiserEventAdminMailer = (
+  adminEmail,
+  addminName,
+  name,
+  addedByUsersEmail,
+  eventName,
+  targetAmount,
+  minimumPay
+) => {
+  const nodemailer = require("nodemailer");
+  var smtpTransport = require("nodemailer-smtp-transport");
+  let transporter = nodemailer.createTransport(
+    smtpTransport({
+      service: "gmail",
+      auth: {
+        user: mail,
+        pass: mailpassword,
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+    })
+  );
+  let mailoptions = {
+    from: mail,
+    to: adminEmail,
+    subject: `${addedByUsersEmail} Added a New Funraiser of Rs. ${targetAmount}: Mail no ${mailNo}`,
+    text: `Dear ${addminName}, ${name} has Created a New Funraiser Event of Rs. ${targetAmount} via App.\nFundriser Event Name is:\n${eventName}.\nMinimum Amount He/She set is Rs. ${minimumPay}. `,
+  };
+  transporter.sendMail(mailoptions, (error, info) => {
+    if (error) {
+      console.log(error);
+    } else {
+      console.log("Email Sent: " + info.response);
+    }
+  });
+};
 const newOnlinePaymentByAdminMailer = (
   adminEmail,
   addminName,
@@ -1710,4 +1780,5 @@ module.exports = {
   newAdminToMemberAdd,
   newDonation,
   newFundraiserPayment,
+  newFundraiser,
 };
