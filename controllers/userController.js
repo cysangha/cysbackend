@@ -366,28 +366,29 @@ const newDonation = async (req, res) => {
     donationAmount,
   });
   try {
-    let response = await data.save();
-    res.status(200).json({ message: "ok" });
-    newDonationMailer(
-      donatedByEmail,
-      donatedByName,
-      donationAmount,
-      donatedByID,
-      donatedByMobile,
-      id
-    );
-    let admins = await Admin.find();
-    admins.map((el) =>
-      newDonationAdminMailer(
-        el.email,
-        el.name,
+    await data.save().then(async () => {
+      res.status(200).json({ message: "ok" });
+      newDonationMailer(
+        donatedByEmail,
         donatedByName,
         donationAmount,
-        id,
+        donatedByID,
         donatedByMobile,
-        donatedByEmail
-      )
-    );
+        id
+      );
+      let admins = await Admin.find();
+      admins.map((el) =>
+        newDonationAdminMailer(
+          el.email,
+          el.name,
+          donatedByName,
+          donationAmount,
+          id,
+          donatedByMobile,
+          donatedByEmail
+        )
+      );
+    });
   } catch (e) {
     res.status(301).json({ message: "error", data: "Payment Cannot Be Done." });
   }
