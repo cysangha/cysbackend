@@ -103,14 +103,13 @@ const newAdminAdd = async (req, res) => {
     addedBy,
   });
   try {
-    await data.save().then(async () => {
-      res.status(200).json({ message: "ok" });
-      newAdminMailer(email, name, addedBy);
-      let admins = await Admin.find();
-      admins.map((el) =>
-        newAdminAdminMailer(el.email, el.name, name, email, addedBy)
-      );
-    });
+    let response = await data.save();
+    res.status(200).json({ message: "ok" });
+    newAdminMailer(email, name, addedBy);
+    let admins = await Admin.find();
+    admins.map((el) =>
+      newAdminAdminMailer(el.email, el.name, name, email, addedBy)
+    );
   } catch (e) {
     res.status(301).json({ message: "error", data: "Member Already Exists." });
   }
@@ -124,21 +123,20 @@ const newMemberToAdminAdd = async (req, res) => {
     purpose,
   });
   try {
-    await data.save().then(async () => {
-      res.status(200).json({ message: "ok" });
-      newAdminMailer(email, name, addedBy);
-      let admins = await Admin.find();
-      admins.map((el) =>
-        newMemberToAdminAmdinMailer(
-          el.email,
-          el.name,
-          name,
-          email,
-          addedBy,
-          purpose
-        )
-      );
-    });
+    let response = await data.save();
+    res.status(200).json({ message: "ok" });
+    newAdminMailer(email, name, addedBy);
+    let admins = await Admin.find();
+    admins.map((el) =>
+      newMemberToAdminAmdinMailer(
+        el.email,
+        el.name,
+        name,
+        email,
+        addedBy,
+        purpose
+      )
+    );
   } catch (e) {
     res.status(301).json({ message: "error", data: "Member Already Exists." });
   }
@@ -229,21 +227,21 @@ const newFundraiser = async (req, res) => {
     minimumPay,
   });
   try {
-    await data.save().then(async () => {
-      res.status(200).json({ message: "ok" });
-      let admins = await Admin.find();
-      admins.map((el) =>
-        newFundraiserEventAdminMailer(
-          el.email,
-          el.name,
-          addedByUsersName,
-          addedByUsersEmail,
-          eventName,
-          targetAmount,
-          minimumPay
-        )
-      );
-    });
+    let response = await data.save();
+    res.status(200).json({ message: "ok" });
+
+    let admins = await Admin.find();
+    admins.map((el) =>
+      newFundraiserEventAdminMailer(
+        el.email,
+        el.name,
+        addedByUsersName,
+        addedByUsersEmail,
+        eventName,
+        targetAmount,
+        minimumPay
+      )
+    );
   } catch (e) {
     res.status(301).json({ message: "error", data: "Can't Add Fundraisers" });
   }
@@ -317,30 +315,28 @@ const newPayment = async (req, res) => {
     pricePaid,
   });
   try {
-    await data.save().then(async () => {
-      res.status(200).json({ message: "ok" });
-      newPaymentMailer(
-        purchasedByEmail,
-        member_name,
+    let response = await data.save();
+    res.status(200).json({ message: "ok" });
+    newPaymentMailer(
+      purchasedByEmail,
+      purchasedByName,
+      pricePaid,
+      membershipPeriod,
+      id
+    );
+    let admins = await Admin.find();
+    admins.map((el) =>
+      newPaymentAdminMailer(
+        el.email,
+        el.name,
+        purchasedByName,
         pricePaid,
-        purchasedByID,
+        id,
+        membershipPeriod,
         purchasedByMobile,
-        id
-      );
-      let admins = await Admin.find();
-      admins.map((el) =>
-        newPaymentAdminMailer(
-          el.email,
-          el.name,
-          member_name,
-          pricePaid,
-          id,
-          membershipPeriod,
-          purchasedByMobile,
-          purchasedByEmail
-        )
-      );
-    });
+        purchasedByEmail
+      )
+    );
   } catch (e) {
     res.status(301).json({ message: "error", data: "Payment Cannot Be Done." });
   }
@@ -369,29 +365,28 @@ const newDonation = async (req, res) => {
     donationAmount,
   });
   try {
-    await data.save().then(async () => {
-      res.status(200).json({ message: "ok" });
-      newDonationMailer(
-        donatedByEmail,
+    let response = await data.save();
+    res.status(200).json({ message: "ok" });
+    newDonationMailer(
+      donatedByEmail,
+      donatedByName,
+      donationAmount,
+      donatedByID,
+      donatedByMobile,
+      id
+    );
+    let admins = await Admin.find();
+    admins.map((el) =>
+      newDonationAdminMailer(
+        el.email,
+        el.name,
         donatedByName,
         donationAmount,
-        donatedByID,
+        id,
         donatedByMobile,
-        id
-      );
-      let admins = await Admin.find();
-      admins.map((el) =>
-        newDonationAdminMailer(
-          el.email,
-          el.name,
-          donatedByName,
-          donationAmount,
-          id,
-          donatedByMobile,
-          donatedByEmail
-        )
-      );
-    });
+        donatedByEmail
+      )
+    );
   } catch (e) {
     res.status(301).json({ message: "error", data: "Payment Cannot Be Done." });
   }
@@ -426,29 +421,28 @@ const newFundraiserPayment = async (req, res) => {
     currentAmount,
   });
   try {
-    await data.save().then(async () => {
-      res.status(200).json({ message: "ok" });
-      newFundRaiserMailer(
-        paymentByEmail,
+    let response = await data.save();
+    res.status(200).json({ message: "ok" });
+    newFundRaiserMailer(
+      paymentByEmail,
+      paymentByName,
+      amount,
+      paymentById,
+      paymentByMobile,
+      id
+    );
+    let admins = await Admin.find();
+    admins.map((el) =>
+      newFundraiserAdminMailer(
+        el.email,
+        el.name,
         paymentByName,
         amount,
-        paymentById,
+        id,
         paymentByMobile,
-        id
-      );
-      let admins = await Admin.find();
-      admins.map((el) =>
-        newFundraiserAdminMailer(
-          el.email,
-          el.name,
-          paymentByName,
-          amount,
-          id,
-          paymentByMobile,
-          paymentByEmail
-        )
-      );
-    });
+        paymentByEmail
+      )
+    );
   } catch (e) {
     res.status(301).json({ message: "error", data: "Payment Cannot Be Done." });
   }
@@ -483,22 +477,22 @@ const newOnlinePaymentByAdmin = async (req, res) => {
     pricePaid,
   });
   try {
-    await data.save().then(async () => {
-      res.status(200).json({ message: "ok" });
-      let admins = await Admin.find();
-      admins.map((el) =>
-        newOnlinePaymentByAdminMailer(
-          el.email,
-          el.name,
-          purchasedByName,
-          purchasedByAdminName,
-          pricePaid,
-          id,
-          membershipPeriod,
-          purchasedByMobile
-        )
-      );
-    });
+    let response = await data.save();
+    res.status(200).json({ message: "ok" });
+
+    let admins = await Admin.find();
+    admins.map((el) =>
+      newOnlinePaymentByAdminMailer(
+        el.email,
+        el.name,
+        purchasedByName,
+        purchasedByAdminName,
+        pricePaid,
+        id,
+        membershipPeriod,
+        purchasedByMobile
+      )
+    );
   } catch (e) {
     res.status(301).json({ message: "error", data: "Payment Cannot Be Done." });
   }
@@ -533,23 +527,22 @@ const newOfflinePaymentByAdmin = async (req, res) => {
     pricePaid,
   });
   try {
-    await data.save().then(async () => {
-      res.status(200).json({ message: "ok" });
+    let response = await data.save();
+    res.status(200).json({ message: "ok" });
 
-      let admins = await Admin.find();
-      admins.map((el) =>
-        newOfflinePaymentByAdminMailer(
-          el.email,
-          el.name,
-          purchasedByName,
-          purchasedByAdminName,
-          pricePaid,
-          id,
-          membershipPeriod,
-          purchasedByMobile
-        )
-      );
-    });
+    let admins = await Admin.find();
+    admins.map((el) =>
+      newOfflinePaymentByAdminMailer(
+        el.email,
+        el.name,
+        purchasedByName,
+        purchasedByAdminName,
+        pricePaid,
+        id,
+        membershipPeriod,
+        purchasedByMobile
+      )
+    );
   } catch (e) {
     res.status(301).json({ message: "error", data: "Payment Cannot Be Done." });
   }
@@ -619,9 +612,8 @@ const userAdd = async (req, res) => {
     date,
   });
   try {
-    await data.save().then(async () => {
-      res.status(200).json({ message: "ok" });
-    });
+    let response = await data.save();
+    res.status(200).json({ message: "ok" });
   } catch (e) {
     res.status(301).json({ message: "error", data: "User Already Exists." });
   }
@@ -666,21 +658,19 @@ const userAddApp = async (req, res) => {
         addedBy,
       });
       try {
-        await adminData.save().then(async () => {
-          res.status(200).json({ message: "ok" });
-          addAccountAndAdminMailer(email, name, mobile, username);
-          let admins = await Admin.find();
-          admins.map((el) =>
-            addAccountAndAdminAdminMailer(
-              el.email,
-              el.name,
-              email,
-              name,
-              mobile,
-              username
-            )
-          );
-        });
+        let adminResponse = await adminData.save();
+        addAccountAndAdminMailer(email, name, mobile, username);
+        let admins = await Admin.find();
+        admins.map((el) =>
+          addAccountAndAdminAdminMailer(
+            el.email,
+            el.name,
+            email,
+            name,
+            mobile,
+            username
+          )
+        );
       } catch (e) {
         console.log(e);
       }
