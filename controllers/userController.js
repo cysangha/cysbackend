@@ -1479,7 +1479,7 @@ const newDonationAdminMailer = (
   let mailoptions = {
     from: mail,
     to: adminEmail,
-    subject: `${name} Made a Payment of Rs. ${pricePaid}: Mail no ${mailNo}`,
+    subject: `${name} Made a Payment of Rs. ${donationAmount}: Mail no ${mailNo}`,
     text: `Dear ${addminName}, ${name} Made a Donation of Rs. ${donationAmount} via App.\n His/Her Payment ID is ${id},\n Mobile No. is ${donatedByMobile},\n Email id is ${donatedByEmail}.\n . `,
   };
   transporter.sendMail(mailoptions, (error, info) => {
